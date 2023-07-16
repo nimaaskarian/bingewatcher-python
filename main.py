@@ -100,7 +100,6 @@ class Serie:
 
 args = parser.parse_args()
 default_dir = os.path.join(os.path.expanduser("~"), ".cache/bingewatcher")
-# print(os.path.exists(default_dir))
 
 mySerie = Serie("Breaking Bad")
 mySerie.add_season(Season(0,7))

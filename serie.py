@@ -1,3 +1,4 @@
+from argparse import FileType
 from typing import List
 class Season:
     watchedEpisodes: int
@@ -18,7 +19,17 @@ class Serie:
         return f"""Name: {self.name}
     Episodes: {self.allEpisodes()}
     Progress: {round(self.progressPercentage(),2)}%
+    Next: {self.nextEpisodeString()}
     """
+    def load(self,path:str):
+        f = open(path)
+        for line in f.readlines():
+            [watched, all] = line.split("+")
+            self.addSeason(Season(int(watched),int(all)))
+    def write(self,path:str):
+        f = open(path, "w")
+        for season in self.seasons:
+            f.write(f"{ season.watchedEpisodes }+{ season.allEpisodes }\n")
     def findCurrentSeason(self)->Season:
         for season in self.seasons:
             if season.watchedEpisodes != season.allEpisodes:

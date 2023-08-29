@@ -2,6 +2,7 @@
 
 import argparse, os, json, sys
 
+from typing import List
 import requests
 from iterfzf import iterfzf
 from serie import Serie, Season
@@ -29,9 +30,19 @@ default_dir = os.path.expanduser("~/.cache/bingewatcher")
 args = parser.parse_args()
 basenames = [name for name in os.listdir(default_dir) if name.endswith(".bw")]
 
+def findSerieInList(series:List[Serie],find:Serie) -> bool:
+    for serie in series:
+        if serie.match(find.name):
+            return True;
+    return False;
 
 def main():
     series = []
+    def appendToSeries(serie:Serie):
+        if not findSerieInList(series, serie):
+            return series.append(serie)
+        raise Exception(f"Error: You already have serie '{serie.name}'. But you tried to add it again.")
+
     for basename in basenames:
         file_path =  os.path.join(default_dir,basename)
         if os.path.isdir(file_path):
@@ -45,7 +56,8 @@ def main():
             pass
     for name in args.new_serie:
         serie = Serie(name)
-        series.append(serie)
+        appendToSeries(serie)
+
         index = len(series)
         args.seriesIndexes.append(index)
 
@@ -78,7 +90,7 @@ def main():
         details_json = json.loads(details.text)
 
         serie = Serie.factory(show["name"], args.extended, args.next_episode)
-        series.append(serie)
+        appendToSeries(serie)
         index = len(series)
         args.seriesIndexes.append(index)
 
@@ -92,7 +104,6 @@ def main():
 
         for season_count in seasons_count:
             serie.addSeason(Season(0,season_count))
-        print(serie)
 
     for index,serie in enumerate(series):
         for match in args.exact_match:

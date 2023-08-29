@@ -67,7 +67,7 @@ def main():
                     # yield f'Name: {serie["name"]}; URL: {serie["permalink"]}'
                     yield json.dumps(serie)
         if int(search_json["total"]) == 1:
-            show=search_json["tv_shows"][0]["permalink"]
+            show=search_json["tv_shows"][0]
         else:
             show=json.loads(iterfzf(iterate_pages(search_json["pages"]),exact=True))
         show_url=f"https://episodate.com/api/show-details?q={show['permalink']}"

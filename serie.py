@@ -1,4 +1,3 @@
-from argparse import FileType
 from typing import List
 class Season:
     watchedEpisodes: int
@@ -12,43 +11,77 @@ class Season:
 class Serie:
     name: str
     seasons: List[Season]
+
+    def search(self, search:str) -> bool:
+        return search.lower() in self.name.lower()
+
+    def match(self, search:str) -> bool:
+        return search == self.name
+
     def __init__(self, name: str) -> None:
         self.name = name
         self.seasons = []
-    def __str__(self):
+
+    def __str__(self) -> str:
+        return self.info()
+
+    def info(self) -> str:
+        if not self.allEpisodes():
+            return ""
         return f"""Name: {self.name}
-    Episodes: {self.allEpisodes()}
-    Progress: {round(self.progressPercentage(),2)}%
-    Next: {self.nextEpisodeString()}
-    """
+Episodes: {self.allEpisodes()}
+Progress: {self.progressPercentage(): .{2}f}%
+Next: {self.nextEpisodeString()}\n"""
+
+    def extendedString(self):
+        seasonStrings = [f"Season {index+1}: {season.watchedEpisodes}/{season.allEpisodes}\n" for index,season in enumerate(self.seasons)]
+        return self.info()+"".join(seasonStrings)
+
     def load(self,path:str):
         f = open(path)
+        times_called = 0
         for line in f.readlines():
+            times_called+=1
             [watched, all] = line.split("+")
-            self.addSeason(Season(int(watched),int(all)))
+            if all:
+                self.addSeason(Season(int(watched),int(all)))
+        if times_called < 1:
+            raise Exception("This file is empty")
+
     def write(self,path:str):
         f = open(path, "w")
         for season in self.seasons:
             f.write(f"{ season.watchedEpisodes }+{ season.allEpisodes }\n")
-    def findCurrentSeason(self)->Season:
+
+    def currentSeason(self)->Season:
         for season in self.seasons:
             if season.watchedEpisodes != season.allEpisodes:
                 return season
         raise Exception("Series is finished")
+
     def nextEpisodeString(self)->str:
         try:
-            s = self.findCurrentSeason()
+            s = self.currentSeason()
         except Exception:
             return ""
         # Season index+1 is the number of the season. Because index is from 0, len(self.seasons)
         # Same goes for watchedEpisodes. We want the NEXT episode. So we add 1
         return f"S{s.index+1:02d}E{s.watchedEpisodes+1:02d}"
-    def progressPercentage(self):
-        return self.watchedEpisodes()*100/self.allEpisodes()
+
+    def progressPercentage(self) -> float:
+        if self.allEpisodes():
+            return self.watchedEpisodes()*100/self.allEpisodes()
+        return 0
+
     def addWatchedEpisodes(self, episodesCount: int) -> None:
+        if not episodesCount:
+            return
+        if episodesCount < 0:
+            return self.removeWatchedEpisodes(-episodesCount)
+        print(f"Added {episodesCount} episodes to {self.name}.")
         while (episodesCount):
             try:
-                currentSeason = self.findCurrentSeason()
+                currentSeason = self.currentSeason()
                 currentSeason.watchedEpisodes += episodesCount
                 episodesCount = 0
                 if (currentSeason.watchedEpisodes > currentSeason.allEpisodes):
@@ -57,7 +90,13 @@ class Serie:
             except Exception:
                 print(f"Warning: Your show is finished. But you have still {episodesCount} episodes to add.")
                 return 
+
     def removeWatchedEpisodes(self, episodesCount: int) -> None: 
+        if not episodesCount:
+            return
+        if episodesCount < 0:
+            return self.addWatchedEpisodes(-episodesCount)
+        print(f"Removed {episodesCount} episodes from {self.name}.")
         while (episodesCount):
             for season in reversed(self.seasons):
                 if not season.watchedEpisodes: 
@@ -70,28 +109,54 @@ class Serie:
                 break
             if (self.isEmpty()):
                 return
+
     def addSeason(self, season: Season)->None:
         season.index=len(self.seasons)
         self.seasons.append(season)
+
     def replaceSeasonWithIndex(self, season: Season, index:int)->None:
         self.seasons[index] = season
+
     def allEpisodes(self) -> int:
         sum = 0
         for season in self.seasons:
             sum+=season.allEpisodes
         return sum
+
     def watchedEpisodes(self) -> int:
         sum = 0
         for season in self.seasons:
             sum+=season.watchedEpisodes
         return sum
+
     def isFinished(self) -> bool:
         for season in self.seasons:
             if season.watchedEpisodes != season.allEpisodes:
                 return False
         return True
+
     def isEmpty(self) -> bool:
         for season in self.seasons:
             if season.watchedEpisodes:
                 return False
         return True
+
+    @staticmethod
+    def factory(name:str,extended=False, nextEpisode=False):
+        if (extended):
+            return ExtendedSerie(name)
+        if (nextEpisode):
+            return EpisodeSerie(name)
+        return Serie(name)
+
+class ExtendedSerie(Serie):
+    def __init__(self, name: str) -> None:
+        super().__init__(name)
+    def __str__(self):
+        return self.extendedString()
+
+class EpisodeSerie(Serie):
+    def __init__(self, name: str) -> None:
+        super().__init__(name)
+    def __str__(self):
+        return self.nextEpisodeString()

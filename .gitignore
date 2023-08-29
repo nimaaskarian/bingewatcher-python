@@ -1,1 +1,6 @@
- __pycache__/
+ __pycache__
+bin
+include
+lib
+lib64
+__pycache__/

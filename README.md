@@ -1,5 +1,10 @@
-# bingewatcher-python
+# Bingewatcher
 A simple command line tool to keep track of series and shows you watch. Written in python.
+
+
+https://github.com/nimaaskarian/bingewatcher-python/assets/88832088/bb672885-9889-4263-88f4-4622674bb2bc
+
+
 ## Installation
 - Clone this repo, make a `venv` and install the dependencies.
     ```
@@ -13,6 +18,6 @@ A simple command line tool to keep track of series and shows you watch. Written 
     For example `/home/user/bingewatcher-python` to `/home/user/bingewatcher-python/main.py`.  
 - Add a `python3` to the beginning, resulting `python3 /home/user/bingewatcher-python/main.py`
 - Then do `echo alias bw="python3 /home/user/bingewatcher-python/main.py" >> ~/.bashrc` (You may change `~/.bashrc` to your shells rc file. For example `~/.zshrc` for zsh)
--`source ~/.bashrc` (or any rc file you used)
+- `source ~/.bashrc` (or any rc file you used)
 - `bw -h` for help options.
 

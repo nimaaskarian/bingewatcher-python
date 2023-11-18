@@ -137,6 +137,7 @@ def main():
         index = len(series)
         args.seriesIndexes.append(index)
 
+    should_exit_failure = False
     for exact_match in args.exact_match:
         matched = False
         for index,serie in enumerate(series):
@@ -145,6 +146,7 @@ def main():
                 matched = True
         if not matched:
             print(f"Couldn't find a serie named '{exact_match}'")
+            should_exit_failure = True
 
     for search in args.search:
         found = False
@@ -154,12 +156,14 @@ def main():
                 found = True
         if not found:
             print(f"Couldn't find a serie that matches '{search}'")
+            should_exit_failure = True
 
     for index in args.seriesIndexes:
         try:
             serie = series[index-1]
         except IndexError:
             print(f"Couldn't find a serie at index '{index}'")
+            should_exit_failure = True
             continue
         if (args.delete_serie):
             delete_serie(serie)
@@ -174,7 +178,7 @@ def main():
 
         serie.write();
 
-    if (args.exact_match or args.search) and not len(args.seriesIndexes):
+    if should_exit_failure:
         exit(1)
 
     if not len(args.seriesIndexes):

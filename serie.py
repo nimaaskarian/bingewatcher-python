@@ -10,6 +10,7 @@ class Season:
 
 class Serie:
     name: str
+    path: str
     seasons: List[Season]
 
     def search(self, search:str) -> bool:
@@ -28,17 +29,23 @@ class Serie:
     def info(self) -> str:
         if not self.allEpisodes():
             return ""
-        return f"""Name: {self.name}
-Episodes: {self.allEpisodes()}
-Progress: {self.progressPercentage(): .{2}f}%
-Next: {self.nextEpisodeString()}\n"""
+        info = f"""Name: {self.name}
+    Episodes: {self.allEpisodes()}
+    Progress: {self.progressPercentage(): .{2}f}%"""
+        if self.isFinished():
+            return info+"\n"
+        else:
+            return f"""{info}
+    Next: {self.nextEpisodeString()}\n"""
 
     def extendedString(self):
         seasonStrings = [f"Season {index+1}: {season.watchedEpisodes}/{season.allEpisodes}\n" for index,season in enumerate(self.seasons)]
-        return self.info()+"".join(seasonStrings)
+        return self.info()+"".join(seasonStrings)+"\n"
 
-    def load(self,path:str):
-        f = open(path)
+    def load(self,path=None):
+        if path is not None:
+            self.path=path
+        f = open(self.path)
         times_called = 0
         for line in f.readlines():
             times_called+=1
@@ -48,7 +55,9 @@ Next: {self.nextEpisodeString()}\n"""
         if times_called < 1:
             raise Exception("This file is empty")
 
-    def write(self,path:str):
+    def write(self,path=None):
+        if path is None:
+            path=self.path
         f = open(path, "w")
         for season in self.seasons:
             f.write(f"{ season.watchedEpisodes }+{ season.allEpisodes }\n")

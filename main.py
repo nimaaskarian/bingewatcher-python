@@ -8,6 +8,7 @@ import requests
 from iterfzf import iterfzf
 from serie import Serie, Season
 
+default_dir = os.path.expanduser("~/.cache/bingewatcher")
 parser = argparse.ArgumentParser( prog='bw.py', description="Keeps track of series that you're watching.")
 parser.add_argument('seriesIndexes',action="extend", nargs="*", type=int, default=[])
 parser.add_argument('-s', '--search', action="append", type=str, default=[])
@@ -25,9 +26,8 @@ parser.add_argument('-o', '--new-online', action="append", type=str, default=[])
 parser.add_argument('-a', '--add-watched', action="store", type=int)
 parser.add_argument('-A', '--add-season', action="append", type=str, default = [])
 parser.add_argument('-r', '--remove-watched', action="store", type=int)
-parser.add_argument('-d', '--directory', action="store", type=str)
+parser.add_argument('-d', '--directory', action="store", type=str, default=default_dir)
 
-default_dir = os.path.expanduser("~/.cache/bingewatcher")
 args = parser.parse_args()
 
 def read_dir_for_series(dir_name:str)-> List[Serie]:
@@ -112,12 +112,12 @@ def get_max_length(length_string:List[int]):
     return np.max(length_string)+SPACES_AFTER_NAME
 
 def main():
-    series = read_dir_for_series(default_dir)
+    series = read_dir_for_series(args.directory)
 
     if args.include_finished:
-        series += read_dir_for_series(os.path.join(default_dir, "finished"))
+        series += read_dir_for_series(os.path.join(args.directory, "finished"))
     if args.only_finished:
-        series = read_dir_for_series(os.path.join(default_dir, "finished"))
+        series = read_dir_for_series(os.path.join(args.directory, "finished"))
 
     def add_new_serie(serie:Serie):
         if not findSerieInList(series, serie):
@@ -176,7 +176,7 @@ def main():
                 serie.addSeason(Season(0, int(allString)))
 
             if serie.path is None:
-                serie.path=os.path.join(default_dir,serie.name+ ".bw")
+                serie.path=os.path.join(args.directory,serie.name+ ".bw")
             serie.write();
 
         max_name_size = get_max_length([len(serie.name) for serie in selected_series])
@@ -189,13 +189,13 @@ def main():
             serie.print(max_name_size)
 
     for serie in series:
-        if serie.isFinished() and os.path.dirname(serie.path)==default_dir:
+        if serie.isFinished() and os.path.dirname(serie.path)==args.directory:
             os.remove(serie.path)
-            serie.path = os.path.join(default_dir,"finished",serie.name+".bw")
+            serie.path = os.path.join(args.directory,"finished",serie.name+".bw")
             serie.write()
-        if not serie.isFinished() and os.path.dirname(serie.path)==os.path.join(default_dir, "finished"):
+        if not serie.isFinished() and os.path.dirname(serie.path)==os.path.join(args.directory, "finished"):
             os.remove(serie.path)
-            serie.path = os.path.join(default_dir,serie.name+".bw")
+            serie.path = os.path.join(args.directory,serie.name+".bw")
             serie.write()
 
     if should_exit_failure:

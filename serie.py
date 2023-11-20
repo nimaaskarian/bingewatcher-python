@@ -26,21 +26,24 @@ class Serie:
     def __str__(self) -> str:
         return self.info()
 
+    def print(self,spaces_after_name):
+        print(f"{self.name}{(spaces_after_name-len(self.name))*' '}{self.info()}")
+
     def info(self) -> str:
         if not self.allEpisodes():
             return ""
-        info = f"""Name: {self.name}
-    Episodes: {self.allEpisodes()}
-    Progress: {self.progressPercentage(): .{2}f}%"""
-        if self.isFinished():
-            return info+"\n"
-        else:
-            return f"""{info}
-    Next: {self.nextEpisodeString()}\n"""
+        return f"{self.allEpisodes()}\t{self.progressPercentage():.{1}f}%\t{self.nextEpisodeString() or '-'}"
+        # if self.isFinished():
+        #     return info+"\n"
+        # else:
+        #     return f"""{info} Next: {self.nextEpisodeString()}\n"""
 
     def extendedString(self):
-        seasonStrings = [f"Season {index+1}: {season.watchedEpisodes}/{season.allEpisodes}\n" for index,season in enumerate(self.seasons)]
-        return self.info()+"".join(seasonStrings)+"\n"
+        seasonString = "".join([f"Season {index+1}: {season.watchedEpisodes}/{season.allEpisodes}\n" for index,season in enumerate(self.seasons)])
+        return f"""Name: {self.name}
+\tEpisodes {self.allEpisodes()}
+\tProgress {self.progressPercentage()}%
+\tNext: {self.nextEpisodeString()}\n"""
 
     def load(self,path=None):
         if path is not None:
@@ -161,11 +164,11 @@ class Serie:
 class ExtendedSerie(Serie):
     def __init__(self, name: str) -> None:
         super().__init__(name)
-    def __str__(self):
-        return self.extendedString()
+    def print(self,spaces_after_name):
+        print(self.extendedString())
 
 class EpisodeSerie(Serie):
     def __init__(self, name: str) -> None:
         super().__init__(name)
-    def __str__(self):
-        return self.nextEpisodeString()
+    def print(self,spaces_after_name):
+        print(self.nextEpisodeString())

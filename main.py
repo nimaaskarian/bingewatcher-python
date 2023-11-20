@@ -1,6 +1,7 @@
 #!/home/nima/Documents/Other/bingewatcher-python3/bin/python3
 
 import argparse, os, json, sys
+import numpy as np
 
 from typing import List
 import requests
@@ -159,32 +160,39 @@ def main():
             should_exit_failure = True
 
     for index in args.seriesIndexes:
-        try:
-            serie = series[index-1]
-        except IndexError:
-            print(f"Couldn't find a serie at index '{index}'")
-            should_exit_failure = True
-            continue
-        if (args.delete_serie):
-            delete_serie(serie)
-            continue
+        if index-1 >= len(series):
+            print(f"Couldn't find a serie with index '{index}'")
+            should_exit_failure=True
 
-        serie.addWatchedEpisodes(args.add_watched)
-        serie.removeWatchedEpisodes(args.remove_watched)
-        for allString in args.add_season:
-            serie.addSeason(Season(0, int(allString)))
+    SPACES_AFTER_NAME = 4
+    selected_series = [series[index-1] for index in args.seriesIndexes if index-1 < len(series)]
+    if (len(selected_series)):
+        max_name_size = np.max([len(serie.name) for serie in selected_series])+SPACES_AFTER_NAME
+        if (not args.extended and not args.next_episode):
+            print("NAME", " "*(max_name_size-4), "EP\t","PROG\t", "NEXT", sep="")
+        for serie in selected_series:
+            if (args.delete_serie):
+                delete_serie(serie)
+                continue
 
-        print(serie)
+            serie.addWatchedEpisodes(args.add_watched)
+            serie.removeWatchedEpisodes(args.remove_watched)
+            for allString in args.add_season:
+                serie.addSeason(Season(0, int(allString)))
 
-        serie.write();
+            serie.print(max_name_size)
+
+            serie.write();
 
     if should_exit_failure:
         exit(1)
-
-    if not len(args.seriesIndexes):
+    if not len(selected_series):
+        max_name_size = np.max([len(serie.name) for serie in series])+SPACES_AFTER_NAME
+        if (not args.extended and not args.next_episode):
+            print("INDEX\t","NAME", " "*(max_name_size-4), "EP\t","PROG\t", "NEXT", sep="")
         for index,serie in enumerate(series):
-            print(f"{ index+1}) ", end="")
-            print(serie)
+            print(index+1,"\t", sep="", end="")
+            serie.print(max_name_size)
         
 
 if __name__ == "__main__":

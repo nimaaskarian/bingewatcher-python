@@ -107,14 +107,12 @@ def delete_serie(serie):
     else:
         print("Info: Remove canceled.")
 
+def get_max_length(length_string:List[int]):
+    SPACES_AFTER_NAME = 4
+    return np.max(length_string)+SPACES_AFTER_NAME
 
 def main():
     series = read_dir_for_series(default_dir)
-    for serie in series:
-        if serie.isFinished() and os.path.dirname(serie.path)==default_dir:
-            os.remove(serie.path)
-            serie.path = os.path.join(default_dir,"finished",serie.name+".bw")
-            serie.write()
 
     if args.include_finished:
         series += read_dir_for_series(os.path.join(default_dir, "finished"))
@@ -126,8 +124,8 @@ def main():
             return series.append(serie)
         raise Exception(f"Error: You already have serie '{serie.name}'. But you tried to add it again.")
 
-    for exact_match in args.new_serie:
-        serie = Serie(exact_match)
+    for new_serie in args.new_serie:
+        serie = Serie(new_serie)
         add_new_serie(serie)
         index = len(series)
         args.seriesIndexes.append(index)
@@ -164,15 +162,12 @@ def main():
             print(f"Couldn't find a serie with index '{index}'")
             should_exit_failure=True
 
-    SPACES_AFTER_NAME = 4
     selected_series = [series[index-1] for index in args.seriesIndexes if index-1 < len(series)]
     if (len(selected_series)):
-        max_name_size = np.max([len(serie.name) for serie in selected_series])+SPACES_AFTER_NAME
-        if (not args.extended and not args.next_episode):
-            print("NAME", " "*(max_name_size-4), "EP\t","PROG\t", "NEXT", sep="")
         for serie in selected_series:
             if (args.delete_serie):
                 delete_serie(serie)
+                serie.path = None
                 continue
 
             serie.addWatchedEpisodes(args.add_watched)
@@ -180,14 +175,33 @@ def main():
             for allString in args.add_season:
                 serie.addSeason(Season(0, int(allString)))
 
+            if serie.path is None:
+                serie.path=os.path.join(default_dir,serie.name+ ".bw")
+            serie.write();
+
+        max_name_size = get_max_length([len(serie.name) for serie in selected_series])
+        if (not args.extended and not args.next_episode) and not args.delete_serie:
+            print("NAME", " "*(max_name_size-4), "EP\t","PROG\t", "NEXT", sep="")
+
+        for serie in selected_series:
+            if serie.path is None:
+                continue
             serie.print(max_name_size)
 
-            serie.write();
+    for serie in series:
+        if serie.isFinished() and os.path.dirname(serie.path)==default_dir:
+            os.remove(serie.path)
+            serie.path = os.path.join(default_dir,"finished",serie.name+".bw")
+            serie.write()
+        if not serie.isFinished() and os.path.dirname(serie.path)==os.path.join(default_dir, "finished"):
+            os.remove(serie.path)
+            serie.path = os.path.join(default_dir,serie.name+".bw")
+            serie.write()
 
     if should_exit_failure:
         exit(1)
     if not len(selected_series):
-        max_name_size = np.max([len(serie.name) for serie in series])+SPACES_AFTER_NAME
+        max_name_size = get_max_length([len(serie.name) for serie in series])
         if (not args.extended and not args.next_episode):
             print("INDEX\t","NAME", " "*(max_name_size-4), "EP\t","PROG\t", "NEXT", sep="")
         for index,serie in enumerate(series):

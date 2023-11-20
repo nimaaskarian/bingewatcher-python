@@ -22,6 +22,7 @@ class Serie:
     def __init__(self, name: str) -> None:
         self.name = name
         self.seasons = []
+        self.path = None
 
     def __str__(self) -> str:
         return self.info()
@@ -39,11 +40,12 @@ class Serie:
         #     return f"""{info} Next: {self.nextEpisodeString()}\n"""
 
     def extendedString(self):
-        seasonString = "".join([f"Season {index+1}: {season.watchedEpisodes}/{season.allEpisodes}\n" for index,season in enumerate(self.seasons)])
+        seasonString = "".join([f"\tSeason {index+1}: {season.watchedEpisodes}/{season.allEpisodes}\n" for index,season in enumerate(self.seasons)])
         return f"""Name: {self.name}
 \tEpisodes {self.allEpisodes()}
-\tProgress {self.progressPercentage()}%
-\tNext: {self.nextEpisodeString()}\n"""
+\tProgress {self.progressPercentage():.{3}f}%
+\tNext: {self.nextEpisodeString()}
+{seasonString}"""
 
     def load(self,path=None):
         if path is not None:
@@ -90,7 +92,7 @@ class Serie:
             return
         if episodesCount < 0:
             return self.removeWatchedEpisodes(-episodesCount)
-        print(f"Added {episodesCount} episodes to {self.name}.")
+        print(f"Added {episodesCount} episodes to '{self.name}'.")
         while (episodesCount):
             try:
                 currentSeason = self.currentSeason()
@@ -108,7 +110,7 @@ class Serie:
             return
         if episodesCount < 0:
             return self.addWatchedEpisodes(-episodesCount)
-        print(f"Removed {episodesCount} episodes from {self.name}.")
+        print(f"Removed {episodesCount} episodes from '{self.name}'.")
         while (episodesCount):
             for season in reversed(self.seasons):
                 if not season.watchedEpisodes: 
